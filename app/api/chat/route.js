@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -9,17 +8,9 @@ const supabase = createClient(
 export async function POST(req) {
   try {
     const body = await req.json();
-
     const message = body.message;
     const chatId = body.chatId;
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-lite",
-    });
-
-    // Buscar histórico do chat
     const { data: historico } = await supabase
       .from("mensagens")
       .select("*")
@@ -29,29 +20,54 @@ export async function POST(req) {
     let contexto = "";
 
     if (historico && historico.length > 0) {
+      const ultimasMensagens = historico.slice(-5);
 
-  const ultimasMensagens = historico.slice(-5);
-
-  ultimasMensagens.forEach((item) => {
-    contexto += `Usuário: ${item.pergunta}\n`;
-    contexto += `YodAI: ${item.resposta}\n`;
-  });
-}
+      ultimasMensagens.forEach((item) => {
+        contexto += `Usuário: ${item.pergunta}\n`;
+        contexto += `YodAI: ${item.resposta}\n`;
+      });
+    }
 
     contexto += `Usuário: ${message}`;
 
-    const result = await model.generateContent(contexto);
-
-    const response = await result.response;
-
-    const text = response.text();
-
-    return Response.json({
-      reply: text,
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://chat-t1kz7n0h7-deywyson-s-projects.vercel.app",
+        "X-Title": "YodAI",
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+       messages: [
+  {
+    role: "system",
+    content:
+      "Você é o YodAI, uma IA em português com estilo sábio e divertido. Responda de forma natural, clara e organizada. Não use markdown. Não use asteriscos, títulos com ##, blocos de citação ou símbolos como >. Use frases curtas, parágrafos simples e listas apenas quando necessário.",
+  },
+  {
+    role: "user",
+    content: contexto,
+  },
+],
+      }),
     });
 
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("ERRO OPENROUTER:", data);
+      return Response.json({
+        reply: "Erro ao responder pela API alternativa.",
+      });
+    }
+
+    return Response.json({
+      reply: data.choices?.[0]?.message?.content || "Não consegui responder.",
+    });
   } catch (error) {
-    console.error("ERRO GEMINI:", error);
+    console.error("ERRO API:", error);
 
     return Response.json({
       reply: "Erro ao responder.",
