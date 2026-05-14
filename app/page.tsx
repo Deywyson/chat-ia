@@ -409,7 +409,7 @@ export default function Home() {
 
         </header>
 
-        <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-5">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-5 pb-32">
 
           {messages.map((msg, index) => (
 
@@ -470,7 +470,7 @@ export default function Home() {
 
         </div>
 
-        <footer className="p-3 md:p-5 border-t border-green-900/50 bg-black/50 shrink-0">
+        <footer className="sticky bottom-0 p-3 md:p-5 border-t border-green-900/50 bg-[#020a05]/95 backdrop-blur-md shrink-0">
 
           <div className="flex gap-2 md:gap-3">
 
