@@ -36,7 +36,9 @@ export default function Home() {
   }
 
   function toggleMusic() {
-    const audioElement = document.getElementById("bg-music") as HTMLAudioElement;
+    const audioElement = document.getElementById(
+      "bg-music"
+    ) as HTMLAudioElement;
 
     if (!audioElement) return;
 
@@ -77,11 +79,20 @@ export default function Home() {
       return;
     }
 
-    const loadedMessages: Message[] = [{ role: "ai", text: mensagemPadrao }];
+    const loadedMessages: Message[] = [
+      { role: "ai", text: mensagemPadrao },
+    ];
 
     data.forEach((item) => {
-      loadedMessages.push({ role: "user", text: item.pergunta });
-      loadedMessages.push({ role: "ai", text: item.resposta });
+      loadedMessages.push({
+        role: "user",
+        text: item.pergunta,
+      });
+
+      loadedMessages.push({
+        role: "ai",
+        text: item.resposta,
+      });
     });
 
     setMessages(loadedMessages);
@@ -97,7 +108,13 @@ export default function Home() {
     if (data) {
       setChats((prev) => [data, ...prev]);
       setActiveChat(data.id);
-      setMessages([{ role: "ai", text: mensagemPadrao }]);
+
+      setMessages([
+        {
+          role: "ai",
+          text: mensagemPadrao,
+        },
+      ]);
     }
   }
 
@@ -109,10 +126,20 @@ export default function Home() {
   async function deleteChat(chatId: number) {
     playSound("/delete-chat.mp3", 0.8);
 
-    await supabase.from("mensagens").delete().eq("chat_id", chatId);
-    await supabase.from("chats").delete().eq("id", chatId);
+    await supabase
+      .from("mensagens")
+      .delete()
+      .eq("chat_id", chatId);
 
-    const updatedChats = chats.filter((chat) => chat.id !== chatId);
+    await supabase
+      .from("chats")
+      .delete()
+      .eq("id", chatId);
+
+    const updatedChats = chats.filter(
+      (chat) => chat.id !== chatId
+    );
+
     setChats(updatedChats);
 
     if (activeChat === chatId) {
@@ -129,10 +156,17 @@ export default function Home() {
     if (!input.trim() || loading || !activeChat) return;
 
     const userMessage = input;
+
     setInput("");
     setLoading(true);
 
-    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        text: userMessage,
+      },
+    ]);
 
     try {
       const res = await fetch("/api/chat", {
@@ -140,67 +174,81 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-           body: JSON.stringify({
-           message: userMessage,
-           chatId: activeChat,
+
+        body: JSON.stringify({
+          message: userMessage,
+          chatId: activeChat,
         }),
       });
 
       const data = await res.json();
 
-      await supabase.from("mensagens").insert([
-        {
-          chat_id: activeChat,
-          pergunta: userMessage,
-          resposta: data.reply,
-        },
-      ]);
-
       if (messages.length <= 1) {
         await supabase
           .from("chats")
-          .update({ titulo: userMessage.slice(0, 28) })
+          .update({
+            titulo: userMessage.slice(0, 28),
+          })
           .eq("id", activeChat);
 
         loadChats();
       }
 
-      setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
-    } catch (error) {
-  console.error("ERRO AO RESPONDER:", error);
-
-  setMessages((prev) => [
-    ...prev,
-    { role: "ai", text: "Erro ao responder. Veja o console/terminal." },
-  ]);
-}
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: data.reply,
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text:
+            "Algo errado aconteceu na Força. Tente novamente.",
+        },
+      ]);
+    }
 
     setLoading(false);
   }
 
   return (
-    <main className="min-h-screen bg-[#020a05] text-white flex">
+    <main className="min-h-screen bg-[#020a05] text-white flex flex-col md:flex-row">
+
       <audio id="bg-music" loop>
-        <source src="/space-theme.mp3" type="audio/mpeg" />
+        <source
+          src="/space-theme.mp3"
+          type="audio/mpeg"
+        />
       </audio>
 
-      <aside className="w-72 border-r border-green-900/50 bg-black/70 p-4 flex flex-col">
+      <aside className="w-full md:w-72 border-r border-green-900/50 bg-black/70 p-4 flex flex-col">
+
         <div className="mb-6 flex items-center gap-3">
+
           <div className="w-14 h-14 rounded-2xl border border-green-400 bg-gradient-to-br from-green-300 via-green-700 to-black flex items-center justify-center shadow-[0_0_22px_#4ade80] overflow-hidden">
+
             <img
               src="/yoda.png"
               alt="YodAI"
-              className="w-full h-full object-cover scale-100 drop-shadow-[0_0_15px_#bbf7d0]"            />
+              className="w-full h-full object-cover scale-125 drop-shadow-[0_0_15px_#bbf7d0]"
+            />
+
           </div>
 
           <div>
             <h1 className="text-3xl font-black text-green-400 drop-shadow-[0_0_12px_#4ade80]">
               YodAI
             </h1>
+
             <p className="text-xs text-green-200">
               Conselho intergaláctico de IA
             </p>
           </div>
+
         </div>
 
         <button
@@ -214,7 +262,9 @@ export default function Home() {
         </button>
 
         <div className="space-y-2 overflow-y-auto">
+
           {chats.map((chat) => (
+
             <div
               key={chat.id}
               className={`flex items-center gap-2 rounded-xl px-3 py-3 transition ${
@@ -223,6 +273,7 @@ export default function Home() {
                   : "bg-green-950/30 hover:bg-green-900/50 text-zinc-300"
               }`}
             >
+
               <button
                 onClick={() => selectChat(chat.id)}
                 className="flex-1 text-left truncate"
@@ -237,85 +288,133 @@ export default function Home() {
               >
                 ✕
               </button>
+
             </div>
+
           ))}
+
         </div>
+
       </aside>
 
       <section className="flex-1 flex flex-col bg-[radial-gradient(circle_at_top,#0f3d1f,#020a05_60%)]">
+
         <header className="p-5 border-b border-green-900/50 bg-black/40">
-          <div className="flex items-center gap-4">
-            <div className="w-24 h-24 rounded-3xl border border-green-400 bg-gradient-to-br from-green-300 via-green-700 to-black flex items-center justify-center shadow-[0_0_35px_#4ade80] overflow-hidden">
+
+          <div className="flex flex-col md:flex-row items-center gap-4">
+
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-3xl border border-green-400 bg-gradient-to-br from-green-300 via-green-700 to-black flex items-center justify-center shadow-[0_0_35px_#4ade80] overflow-hidden">
+
               <img
                 src="/yoda.png"
                 alt="YodAI"
-                className="w-full h-full object-cover scale-100 drop-shadow-[0_0_15px_#bbf7d0]"
+                className="w-full h-full object-cover scale-125 drop-shadow-[0_0_15px_#bbf7d0]"
               />
+
             </div>
 
-            <div>
-              <h2 className="text-5xl font-black tracking-wide text-green-300 drop-shadow-[0_0_12px_#4ade80]">
+            <div className="text-center md:text-left">
+
+              <h2 className="text-3xl md:text-5xl font-black tracking-wide text-green-300 drop-shadow-[0_0_12px_#4ade80]">
                 YodAI
               </h2>
+
               <p className="text-sm text-green-200">
                 Sábia IA da galáxia • online • digitando com a Força
               </p>
+
             </div>
 
             <button
               onClick={toggleMusic}
-              className="ml-auto rounded-xl border border-green-400/40 px-4 py-2 text-green-300 hover:bg-green-400 hover:text-black transition"
+              className="md:ml-auto rounded-xl border border-green-400/40 px-4 py-2 text-green-300 hover:bg-green-400 hover:text-black transition"
             >
-              {musicOn ? "Pausar música" : "Tocar música"}
+              {musicOn
+                ? "Pausar música"
+                : "Tocar música"}
             </button>
+
           </div>
+
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
+
           {messages.map((msg, index) => (
+
             <div
               key={index}
               className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
+                msg.role === "user"
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
+
               <div
-                className={`max-w-[75%] rounded-3xl px-5 py-4 shadow-xl leading-relaxed ${
+                className={`max-w-[90%] md:max-w-[75%] rounded-3xl px-5 py-4 shadow-xl leading-relaxed ${
                   msg.role === "user"
                     ? "bg-green-500 text-black rounded-br-md font-medium"
-                    : "bg-black/70 border border-green-400/30 text-green-100 rounded-bl-md"
+                    : "bg-black/70 border border-green-400/30 text-green-100 rounded-bl-md text-sm leading-6"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{msg.text}</p>
+
+                <p className="whitespace-pre-wrap">
+                  {msg.text}
+                </p>
+
               </div>
+
             </div>
+
           ))}
 
           {loading && (
+
             <div className="flex justify-start">
+
               <div className="bg-black/70 border border-green-400/30 rounded-3xl rounded-bl-md px-5 py-4">
+
                 <p className="text-green-300 text-sm mb-2">
                   YodAI está digitando...
                 </p>
+
                 <div className="flex gap-2">
+
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce"></span>
+
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+
                 </div>
+
               </div>
+
             </div>
+
           )}
+
         </div>
 
         <footer className="p-5 border-t border-green-900/50 bg-black/50">
-          <div className="flex gap-3">
+
+          <div className="flex flex-col md:flex-row gap-3">
+
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) =>
+                setInput(e.target.value)
+              }
+
               onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+                if (e.key === "Enter") {
+                  sendMessage();
+                }
               }}
+
               placeholder="Envie sua mensagem para o conselho Jedi..."
+
               className="flex-1 rounded-2xl bg-black/70 border border-green-700 px-5 py-4 outline-none focus:border-green-400 transition"
             />
 
@@ -326,9 +425,13 @@ export default function Home() {
             >
               Enviar
             </button>
+
           </div>
+
         </footer>
+
       </section>
+
     </main>
   );
 }
