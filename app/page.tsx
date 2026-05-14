@@ -393,7 +393,7 @@ export default function Home() {
               </h2>
 
               <p className="hidden sm:block text-xs md:text-sm text-green-200 truncate">
-                Sábia IA da galáxia • online • digitando com a Força
+                Sábia IA da galáxia digitando com a Força
               </p>
 
             </div>
