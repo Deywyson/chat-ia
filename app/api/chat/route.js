@@ -22,10 +22,16 @@ export async function POST(req) {
     });
 
   } catch (error) {
-    console.error(error);
+  console.error("ERRO GEMINI:", error);
 
+  if (error.status === 429) {
     return Response.json({
-      reply: "Erro ao responder.",
+      reply: "Muitas mensagens em pouco tempo. Aguarde alguns segundos e tente novamente."
     });
   }
+
+  return Response.json({
+    reply: "Erro ao responder."
+  });
 }
+  }
