@@ -140,7 +140,10 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userMessage }),
+           body: JSON.stringify({
+           message: userMessage,
+           chatId: activeChat,
+        }),
       });
 
       const data = await res.json();
