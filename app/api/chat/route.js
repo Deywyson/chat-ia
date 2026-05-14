@@ -24,14 +24,20 @@ export async function POST(req) {
 
     const ultimasMensagens = historico ? historico.slice(-10) : [];
 
-    let contexto = "";
+    let contexto = "HISTÓRICO DA CONVERSA:\n\n";
 
     ultimasMensagens.forEach((item) => {
       contexto += `Usuário: ${item.pergunta}\n`;
-      contexto += `YodAI: ${item.resposta}\n`;
+      contexto += `YodAI: ${item.resposta}\n\n`;
     });
 
-    contexto += `Usuário: ${message}`;
+    contexto += `
+IMPORTANTE:
+Analise o histórico acima. Se o usuário informou o próprio nome anteriormente, responda usando exatamente o nome que aparece no histórico. Não invente nomes. Nunca diga que não lembra se o nome estiver no histórico.
+
+PERGUNTA ATUAL:
+${message}
+`;
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -50,7 +56,7 @@ export async function POST(req) {
             {
               role: "system",
               content:
-                "Você é o YodAI, uma IA inteligente inspirada em Star Wars. Você DEVE usar o histórico da conversa para lembrar informações do usuário como nome, gostos e contexto. Se o usuário já disse o nome no histórico, responda corretamente com esse nome. Nunca diga que não tem acesso ao histórico se ele foi enviado. Responda de forma natural, curta, inteligente e amigável. Não use markdown, asteriscos ou símbolos desnecessários.",
+                "Você é o YodAI, uma IA inteligente inspirada em ficção científica. Você recebe o histórico da conversa e deve usar esse histórico para lembrar informações que o usuário já disse, como nome, preferências e contexto. Se o usuário disser 'me chamo X', 'meu nome é X' ou algo parecido, memorize X dentro da conversa. Se depois perguntarem 'qual meu nome?', responda usando o nome que aparece no histórico. Nunca invente um nome. Nunca diga que não lembra se o nome estiver no histórico. Responda de forma natural, curta, clara e em português. Não use markdown.",
             },
             {
               role: "user",
